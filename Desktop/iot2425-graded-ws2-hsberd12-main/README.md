@@ -128,11 +128,3 @@ http://localhost:9831/map.html
 - **Dependencies:** Ensure POCO and jsoncpp are installed correctly.
 - **Multiple Clients:** You can open separate terminals for each eBike client.
 
-## Screenshots 📸
-
-(Add screenshots if needed)
-
-## Author
-
-Hasibe Erdogan  
-*UWE Bristol - IoT eBike Fleet Monitoring Project*
