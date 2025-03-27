@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eBike Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 80vh; }
+        #bicycle-table-container { height: 20vh; overflow-y: auto; border: 1px solid #ccc; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; position: sticky; top: 0; z-index: 1; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="bicycle-table-container">
+        <table id="bicycle-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Coordinates</th>
+                    <th>Status</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        const map = L.map('map').setView([51.455, -2.585], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+        const bicycleMarkers = new Map();
+
+        const customIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowUrl: null
+        });
+
+        async function fetchEbikes() {
+            try {
+                const response = await fetch('/');
+                const data = await response.json();
+
+                console.log("✅ Data received:", data);
+
+                if (!data || !data.ebikes || data.ebikes.length === 0) {
+                    console.log("❌ No eBike data yet, map and table will not be updated.");
+                    updateMap([]);
+                    updateTable([]);
+                    return;
+                }
+
+                // En güncel verileri seç
+                const latestEbikes = {};
+                data.ebikes.forEach(ebike => {
+                    const id = ebike.properties.bike_id;
+                    const timestamp = new Date(ebike.properties.timestamp);
+                    if (!latestEbikes[id] || new Date(latestEbikes[id].properties.timestamp) < timestamp) {
+                        latestEbikes[id] = ebike;
+                    }
+                });
+
+                const latestList = Object.values(latestEbikes);
+                updateMap(latestList);
+                updateTable(latestList);
+
+            } catch (error) {
+                console.error('Error fetching bicycle data:', error);
+            }
+        }
+
+        function updateMap(ebikes) {
+            bicycleMarkers.forEach((marker) => {
+                marker.remove();
+            });
+            bicycleMarkers.clear();
+
+            ebikes.forEach(ebike => {
+                const bikeId = ebike.properties.bike_id;
+                const longitude = ebike.geometry.coordinates[0];
+                const latitude = ebike.geometry.coordinates[1];
+                const timestamp = ebike.properties.timestamp;
+
+                const marker = L.marker([latitude, longitude], { icon: customIcon }) 
+                    .addTo(map)
+                    .bindPopup(`🚲 eBike ID: ${bikeId}<br>🕒 Last Updated: ${timestamp}`);
+
+                bicycleMarkers.set(bikeId, marker);
+            });
+        }
+
+        function updateTable(ebikes) {
+            const tableBody = document.getElementById('bicycle-table').querySelector('tbody');
+            tableBody.innerHTML = '';
+
+            ebikes.forEach(ebike => {
+                const bikeId = ebike.properties.bike_id;
+                const longitude = ebike.geometry.coordinates[0];
+                const latitude = ebike.geometry.coordinates[1];
+                const timestamp = ebike.properties.timestamp;
+
+                const row = document.createElement('tr');
+                row.innerHTML = 
+                    `<td>${bikeId}</td>
+                    <td>${latitude.toFixed(5)}, ${longitude.toFixed(5)}</td>
+                    <td>Active</td>
+                    <td>${timestamp}</td>`;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        fetchEbikes();
+        setInterval(fetchEbikes, 3000);
+    </script>
+</body>
+</html>
