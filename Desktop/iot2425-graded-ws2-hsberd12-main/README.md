@@ -66,6 +66,7 @@ make
 ```bash
 ./ebikeGateway
 ```
+![GATEWAY START](screenshots/gateway-start.png)
 
 - Listens on **UDP port 8080**.
 - Starts HTTP server on **http://localhost:9831**.
@@ -81,6 +82,7 @@ Each eBike client simulates GPS data by reading from CSV:
 ./ebikeClient data/sim-eBike-3.csv 8080 3
 ./ebikeClient data/sim-eBike-4.csv 8080 4
 ```
+![EBIKE-OUTPUT](screenshots/ebike-output.png)
 
 > **Arguments:**
 > 1. CSV file path
@@ -94,6 +96,7 @@ Open your browser:
 ```
 http://localhost:9831/map.html
 ```
+![MAP ](screenshots/map-ui.png)
 
 - Map will show real-time locations.
 - Table lists:
@@ -127,4 +130,5 @@ http://localhost:9831/map.html
 - **Port Issues:** Make sure **port 8080** (UDP) and **9831 (HTTP)** are free.
 - **Dependencies:** Ensure POCO and jsoncpp are installed correctly.
 - **Multiple Clients:** You can open separate terminals for each eBike client.
+
 
